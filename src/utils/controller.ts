@@ -1,7 +1,20 @@
 import type { DataResponse, ClientPageData, ClientRevisionData } from '../models/data';
 import { generateNanoid } from './nanoid';
 import * as db from '../db/queries';
-import type { NewIndexData, NewRevisionData, IndexDataUpdate } from '../db/schema';
+import type { NewIndexData, NewRevisionData, IndexDataUpdate, IndexData } from '../db/schema';
+
+function toClientPageData(indexData: IndexData): ClientPageData {
+    return {
+        shortId: indexData.shortId,
+        title: indexData.title ?? '',
+        source: indexData.source ?? '',
+        createdAt: new Date(indexData.createdAt).toISOString(),
+        createdBy: indexData.createdBy ?? '',
+        updatedAt: new Date(indexData.updatedAt).toISOString(),
+        updatedBy: indexData.updatedBy ?? '',
+        revisionCount: indexData.revisionCount,
+    };
+}
 
 export async function getPageData(shortId: string): Promise<DataResponse<ClientPageData>> {
     try {
@@ -11,15 +24,8 @@ export async function getPageData(shortId: string): Promise<DataResponse<ClientP
             return { data: null, error: "Page not found" };
         }
 
-        const pageData: ClientPageData = {
-            title: indexData.title ?? '',
-            source: indexData.source ?? '',
-            shortId: indexData.shortId,
-            revisionCount: indexData.revisionCount,
-            updatedAt: new Date(indexData.updatedAt).toISOString(),
-            updatedBy: indexData.updatedBy ?? '',
-        };
-        return { data: pageData, error: null };
+        const pageData = toClientPageData(indexData);
+        return { data: pageData };
     } catch (error) {
         console.error('Error getting page data:', error);
         return { data: null, error: "Failed to retrieve page data" };
@@ -44,7 +50,7 @@ export async function getPageRevisionData(shortId: string, revisionId: number): 
             createdBy: revisionData.createdBy ?? '',
         };
 
-        return { data: pageData, error: null };
+        return { data: pageData };
     } catch (error) {
         console.error('Error getting revision data:', error);
         return { data: null, error: "Failed to retrieve revision data" };
@@ -65,7 +71,7 @@ export async function getPageHistoryData(shortId: string): Promise<DataResponse<
             createdBy: data.createdBy ?? '',
         }));
 
-        return { data: revisionData, error: null };
+        return { data: revisionData };
     } catch (error) {
         console.error('Error getting history data:', error);
         return { data: null, error: "Failed to retrieve history data" };
@@ -75,12 +81,13 @@ export async function getPageHistoryData(shortId: string): Promise<DataResponse<
 export async function createData(title: string, source: string, createdBy: string): Promise<DataResponse<ClientPageData>> {
     try {
         const shortId = generateNanoid();
+
         const indexData: NewIndexData = {
             shortId,
             title,
             source,
             revisionCount: 0,
-            updatedAt: new Date().toISOString(),
+            createdBy,
             updatedBy: createdBy,
         };
 
@@ -88,7 +95,6 @@ export async function createData(title: string, source: string, createdBy: strin
             shortId,
             title,
             source,
-            createdAt: new Date().toISOString(),
             createdBy,
             revisionCount: 0,
         };
@@ -99,16 +105,8 @@ export async function createData(title: string, source: string, createdBy: strin
             return { data: null, error: "Failed to create page" };
         }
 
-        const pageData: ClientPageData = {
-            title: result.indexData.title ?? '',
-            source: result.indexData.source ?? '',
-            shortId: result.indexData.shortId,
-            revisionCount: result.indexData.revisionCount,
-            updatedAt: new Date(result.indexData.updatedAt).toISOString(),
-            updatedBy: result.indexData.updatedBy ?? '',
-        };
-
-        return { data: pageData, error: null };
+        const pageData = toClientPageData(result.indexData);
+        return { data: pageData };
     } catch (error) {
         console.error('Error creating page:', error);
         return { data: null, error: "Failed to create page" };
@@ -137,16 +135,8 @@ export async function updateData(shortId: string, title: string, source: string,
             return { data: null, error: "Page not found" };
         }
 
-        const pageData: ClientPageData = {
-            title: result.indexData.title ?? '',
-            source: result.indexData.source ?? '',
-            shortId: result.indexData.shortId,
-            revisionCount: result.indexData.revisionCount,
-            updatedAt: new Date(result.indexData.updatedAt).toISOString(),
-            updatedBy: result.indexData.updatedBy ?? '',
-        };
-
-        return { data: pageData, error: null };
+        const pageData = toClientPageData(result.indexData);
+        return { data: pageData };
     } catch (error) {
         console.error('Error updating page:', error);
         return { data: null, error: "Failed to update page" };

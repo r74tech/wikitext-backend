@@ -9,7 +9,6 @@ import { closeDb } from './db/kysely';
 
 const app = new Hono();
 
-// Middleware
 app.use(logger());
 app.use(
   '*',
@@ -23,7 +22,6 @@ app.use(
   })
 );
 
-// Health check
 app.get('/', async (c) => {
   return c.json({
     message: 'Welcome to the Wikitext Previewer API',
@@ -38,7 +36,6 @@ app.get('/', async (c) => {
   });
 });
 
-// V1 health check
 app.get('/v1/health', async (c) => {
   return c.json({
     status: 'healthy',
@@ -47,11 +44,11 @@ app.get('/v1/health', async (c) => {
   });
 });
 
-// Create Data
 app.post('/v1/data', async (c) => {
   try {
     const { title, source, createdBy } = await c.req.json<SaveDataRequest>();
     const responseData = await createData(title, source, createdBy);
+    console.debug('POST /v1/data response:', JSON.stringify(responseData));
     return c.json(responseData);
   } catch (error) {
     console.error('Error in POST /data:', error);
@@ -59,12 +56,12 @@ app.post('/v1/data', async (c) => {
   }
 });
 
-// Update Data
 app.patch('/v1/data/:shortId', async (c) => {
   try {
     const shortId = c.req.param('shortId');
     const { title, source, createdBy } = await c.req.json<SaveDataRequest>();
     const responseData = await updateData(shortId, title, source, createdBy);
+    console.debug('PATCH /v1/data response:', JSON.stringify(responseData));
     return c.json(responseData);
   } catch (error) {
     console.error('Error in PATCH /data/:shortId:', error);
@@ -72,7 +69,6 @@ app.patch('/v1/data/:shortId', async (c) => {
   }
 });
 
-// Get Data
 app.get('/v1/data/:shortId', async (c) => {
   try {
     const shortId = c.req.param('shortId');
@@ -84,7 +80,6 @@ app.get('/v1/data/:shortId', async (c) => {
   }
 });
 
-// Get History
 app.post('/v1/data/:shortId/history', async (c) => {
   try {
     const shortId = c.req.param('shortId');
@@ -96,7 +91,6 @@ app.post('/v1/data/:shortId/history', async (c) => {
   }
 });
 
-// Get Revision
 app.post('/v1/data/:shortId/revision/:revisionId', async (c) => {
   try {
     const shortId = c.req.param('shortId');
@@ -114,7 +108,6 @@ app.post('/v1/data/:shortId/revision/:revisionId', async (c) => {
   }
 });
 
-// Error handling
 app.onError((err, c) => {
   console.error('Unhandled error:', err);
   return c.json(
@@ -128,7 +121,6 @@ app.onError((err, c) => {
   );
 });
 
-// Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down gracefully...');
   await closeDb();
@@ -141,12 +133,10 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-// Start server
 const port = config.PORT;
 
 console.log(`Starting server on port ${port}...`);
 
-// Use Bun's native server if available
 if (typeof globalThis.Bun !== 'undefined') {
   const server = Bun.serve({
     port,
@@ -154,7 +144,6 @@ if (typeof globalThis.Bun !== 'undefined') {
   });
   console.log(`Bun server is running at ${server.hostname}:${server.port}`);
 } else {
-  // Fallback to Node.js
   serve({
     fetch: app.fetch,
     port,
@@ -162,5 +151,4 @@ if (typeof globalThis.Bun !== 'undefined') {
   console.log(`Node.js server is running on port ${port}`);
 }
 
-// Export app for testing
 export { app };

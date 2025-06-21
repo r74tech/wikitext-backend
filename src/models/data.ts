@@ -1,4 +1,3 @@
-// SaveDataRequest: Request for saving data
 export interface SaveDataRequest {
     shortId: string;
     title: string;
@@ -7,23 +6,22 @@ export interface SaveDataRequest {
     hashedPassword?: string;
 }
 
-// DataResponse: API response type
 export interface DataResponse<T> {
     data: T | null;
-    error: string | null;
+    error?: string;
 }
 
-// ClientPageData: Page data returned to client
 export interface ClientPageData {
+    shortId: string;
     title: string;
     source: string;
-    shortId: string;
-    revisionCount: number;
+    createdAt: string;
+    createdBy: string;
     updatedAt: string;
     updatedBy: string;
+    revisionCount: number;
 }
 
-// ClientRevisionData: Revision data returned to client
 export interface ClientRevisionData {
     revisionId: number;
     shortId: string;
@@ -34,7 +32,6 @@ export interface ClientRevisionData {
     createdBy: string;
 }
 
-// IndexData: indexdata table record type
 export interface IndexData {
     id?: number;
     shortId: string;
@@ -51,7 +48,6 @@ export interface IndexData {
     metadata?: unknown;
 }
 
-// RevisionData: revisiondata table record type
 export interface RevisionData {
     id: number;
     shortId: string;
@@ -65,7 +61,6 @@ export interface RevisionData {
     wikidotRevisionId?: string;
 }
 
-// WikidotSyncLog: Wikidot sync log record type
 export interface WikidotSyncLog {
     id: number;
     shortId: string;

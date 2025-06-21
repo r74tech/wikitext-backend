@@ -7,15 +7,14 @@ import type {
   NewRevisionData
 } from './schema';
 
-// IndexData operations
 export async function insertIndexData(data: NewIndexData): Promise<IndexData> {
   const db = getDb();
+  const { createdAt, updatedAt, ...insertData } = data;
   const result = await db
     .insertInto('indexdata')
     .values({
-      ...data,
-      revisionCount: data.revisionCount ?? 0,
-      updatedAt: data.updatedAt ?? new Date().toISOString(),
+      ...insertData,
+      revisionCount: insertData.revisionCount ?? 0,
     })
     .returningAll()
     .executeTakeFirstOrThrow();
@@ -28,11 +27,11 @@ export async function updateIndexData(
   data: IndexDataUpdate
 ): Promise<IndexData | undefined> {
   const db = getDb();
+  const { createdAt, updatedAt, ...updateData } = data;
   const result = await db
     .updateTable('indexdata')
     .set({
-      ...data,
-      updatedAt: new Date().toISOString(),
+      ...updateData,
     })
     .where('shortId', '=', shortId)
     .returningAll()
@@ -50,14 +49,13 @@ export async function getIndexData(shortId: string): Promise<IndexData | undefin
     .executeTakeFirst();
 }
 
-// RevisionData operations
 export async function insertRevisionData(data: NewRevisionData): Promise<RevisionData> {
   const db = getDb();
+  const { createdAt, ...insertData } = data;
   const result = await db
     .insertInto('revisiondata')
     .values({
-      ...data,
-      createdAt: data.createdAt ?? new Date().toISOString(),
+      ...insertData,
     })
     .returningAll()
     .executeTakeFirstOrThrow();
@@ -88,30 +86,27 @@ export async function getHistoryData(shortId: string): Promise<RevisionData[]> {
     .execute();
 }
 
-// Transaction-based operations
 export async function createPageWithRevision(
   indexData: NewIndexData,
   revisionData: NewRevisionData
 ): Promise<{ indexData: IndexData; revisionData: RevisionData }> {
   return await transaction(async (trx) => {
-    // Insert index data
+    const { createdAt, updatedAt, ...cleanIndexData } = indexData;
     const newIndexData = await trx
       .insertInto('indexdata')
       .values({
-        ...indexData,
+        ...cleanIndexData,
         revisionCount: 0,
-        updatedAt: new Date().toISOString(),
       })
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    // Insert revision data
+    const { createdAt: revCreatedAt, ...cleanRevisionData } = revisionData;
     const newRevisionData = await trx
       .insertInto('revisiondata')
       .values({
-        ...revisionData,
+        ...cleanRevisionData,
         revisionCount: 0,
-        createdAt: new Date().toISOString(),
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -129,7 +124,6 @@ export async function updatePageWithRevision(
   revisionData: NewRevisionData
 ): Promise<{ indexData: IndexData; revisionData: RevisionData } | null> {
   return await transaction(async (trx) => {
-    // Check if page exists
     const existing = await trx
       .selectFrom('indexdata')
       .selectAll()
@@ -140,24 +134,20 @@ export async function updatePageWithRevision(
       return null;
     }
 
-    // Update index data (trigger will increment revisionCount)
+    const { createdAt, updatedAt, ...cleanUpdateData } = updateData;
     const updatedIndex = await trx
       .updateTable('indexdata')
-      .set({
-        ...updateData,
-        updatedAt: new Date().toISOString(),
-      })
+      .set(cleanUpdateData)
       .where('shortId', '=', shortId)
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    // Insert new revision with the updated revision count
+    const { createdAt: revCreatedAt, ...cleanRevisionData } = revisionData;
     const newRevision = await trx
       .insertInto('revisiondata')
       .values({
-        ...revisionData,
+        ...cleanRevisionData,
         revisionCount: updatedIndex.revisionCount,
-        createdAt: new Date().toISOString(),
       })
       .returningAll()
       .executeTakeFirstOrThrow();

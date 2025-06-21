@@ -77,12 +77,12 @@ bun run dev
 
 ### Health Check
 ```
-GET /
+GET /v1/health
 ```
 
 ### Create Page
 ```
-POST /data
+POST /v1/data
 Body: {
   "title": "Page Title",
   "source": "Wiki content",
@@ -92,7 +92,7 @@ Body: {
 
 ### Update Page
 ```
-PATCH /data/:shortId
+PATCH /v1/data/:shortId
 Body: {
   "title": "Updated Title",
   "source": "Updated content",
@@ -102,17 +102,17 @@ Body: {
 
 ### Get Page
 ```
-GET /data/:shortId
+GET /v1/data/:shortId
 ```
 
 ### Get Page History
 ```
-POST /data/:shortId/history
+POST /v1/data/:shortId/history
 ```
 
 ### Get Specific Revision
 ```
-POST /data/:shortId/revision/:revisionId
+POST /v1/data/:shortId/revision/:revisionId
 ```
 
 ## Development

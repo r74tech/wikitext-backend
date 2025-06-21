@@ -1,6 +1,5 @@
 import type { ColumnType, Generated, Selectable, Insertable, Updateable } from 'kysely';
 
-// Database table types
 export interface IndexDataTable {
   id: Generated<number>;
   shortId: string;
@@ -8,6 +7,8 @@ export interface IndexDataTable {
   source: string | null;
   hashedPassword: string | null;
   revisionCount: ColumnType<number, number | undefined, number>;
+  createdAt: ColumnType<Date, string | undefined, string>;
+  createdBy: string | null;
   updatedAt: ColumnType<Date, string | undefined, string>;
   updatedBy: string | null;
   // Future fields
@@ -47,7 +48,6 @@ export interface MigrationsTable {
   appliedAt: ColumnType<Date, string | undefined, never>;
 }
 
-// Database schema
 export interface Database {
   indexdata: IndexDataTable;
   revisiondata: RevisionDataTable;
@@ -55,7 +55,6 @@ export interface Database {
   migrations: MigrationsTable;
 }
 
-// Type helpers for cleaner code
 export type IndexData = Selectable<IndexDataTable>;
 export type NewIndexData = Insertable<IndexDataTable>;
 export type IndexDataUpdate = Updateable<IndexDataTable>;
