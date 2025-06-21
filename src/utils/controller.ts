@@ -16,7 +16,7 @@ export async function getPageData(shortId: string): Promise<DataResponse<ClientP
             source: indexData.source ?? '',
             shortId: indexData.shortId,
             revisionCount: indexData.revisionCount,
-            updatedAt: indexData.updatedAt.toString(),
+            updatedAt: new Date(indexData.updatedAt).toISOString(),
             updatedBy: indexData.updatedBy ?? '',
         };
         return { data: pageData, error: null };
@@ -40,7 +40,7 @@ export async function getPageRevisionData(shortId: string, revisionId: number): 
             title: revisionData.title ?? '',
             source: revisionData.source ?? '',
             revisionCount: revisionData.revisionCount,
-            createdAt: revisionData.createdAt.toString(),
+            createdAt: new Date(revisionData.createdAt).toISOString(),
             createdBy: revisionData.createdBy ?? '',
         };
 
@@ -61,7 +61,7 @@ export async function getPageHistoryData(shortId: string): Promise<DataResponse<
             title: data.title ?? '',
             source: data.source ?? '',
             revisionCount: data.revisionCount,
-            createdAt: data.createdAt.toString(),
+            createdAt: new Date(data.createdAt).toISOString(),
             createdBy: data.createdBy ?? '',
         }));
 
@@ -104,7 +104,7 @@ export async function createData(title: string, source: string, createdBy: strin
             source: result.indexData.source ?? '',
             shortId: result.indexData.shortId,
             revisionCount: result.indexData.revisionCount,
-            updatedAt: result.indexData.updatedAt.toString(),
+            updatedAt: new Date(result.indexData.updatedAt).toISOString(),
             updatedBy: result.indexData.updatedBy ?? '',
         };
 
@@ -142,7 +142,7 @@ export async function updateData(shortId: string, title: string, source: string,
             source: result.indexData.source ?? '',
             shortId: result.indexData.shortId,
             revisionCount: result.indexData.revisionCount,
-            updatedAt: result.indexData.updatedAt.toString(),
+            updatedAt: new Date(result.indexData.updatedAt).toISOString(),
             updatedBy: result.indexData.updatedBy ?? '',
         };
 
