@@ -4,7 +4,7 @@ services:
     container_name: wikitext-postgres
     restart: unless-stopped
     env_file:
-      - .env
+      - .env.prd
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -13,8 +13,6 @@ services:
       PGPORT: ${POSTGRES_PORT}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "${POSTGRES_HOST:-127.0.0.1}:${POSTGRES_PORT}:${POSTGRES_PORT}"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -p ${POSTGRES_PORT}"]
       interval: 10s
@@ -30,9 +28,9 @@ services:
     container_name: wikitext-app
     restart: unless-stopped
     env_file:
-      - .env
+      - .env.prd
     environment:
-      NODE_ENV: ${NODE_ENV}
+      NODE_ENV: production
       PORT: ${PORT}
       DATABASE_HOST: postgres
       DATABASE_PORT: ${POSTGRES_PORT}
@@ -41,8 +39,6 @@ services:
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
       CORS_ORIGINS: ${CORS_ORIGINS}
       LOG_LEVEL: ${LOG_LEVEL}
-    ports:
-      - "${APP_HOST:-127.0.0.1}:${APP_PORT}:${PORT}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -51,6 +47,24 @@ services:
     volumes:
       - ./logs:/app/logs
 
+  https-portal:
+    image: steveltn/https-portal:1
+    container_name: wikitext-https-portal
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAINS: "apiwd.r74.tech -> http://app:8300"
+      STAGE: production
+      # FORCE_RENEW: 'true' # Uncomment to force renew certificates
+    depends_on:
+      - app
+    networks:
+      - wikitext-network
+    volumes:
+      - https-portal-data:/var/lib/https-portal
+
   migrate:
     build:
       context: .
@@ -58,7 +72,7 @@ services:
     container_name: wikitext-migrate
     command: ["run", "src/db/migrate.ts", "up"]
     env_file:
-      - .env
+      - .env.prd
     environment:
       DATABASE_HOST: postgres
       DATABASE_PORT: ${POSTGRES_PORT}
@@ -73,33 +87,10 @@ services:
     profiles:
       - tools
 
-  # Optional: pgAdmin for database management
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: wikitext-pgadmin
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
-      PGADMIN_CONFIG_SERVER_MODE: "False"
-      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
-    ports:
-      - "${PGADMIN_HOST:-127.0.0.1}:${PGADMIN_PORT}:80"
-    depends_on:
-      - postgres
-    networks:
-      - wikitext-network
-    profiles:
-      - tools
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-
 volumes:
   postgres_data:
     driver: local
-  pgadmin_data:
+  https-portal-data:
     driver: local
 
 networks:

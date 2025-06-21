@@ -69,3 +69,29 @@ clean: down ## Clean up containers and volumes
 rebuild: ## Rebuild containers
 	docker compose build --no-cache
 	docker compose up -d
+
+# === Production ===
+.PHONY: prod-up
+prod-up: ## Start production services
+	docker compose -f compose.prd.yml up -d
+
+.PHONY: prod-down
+prod-down: ## Stop production services
+	docker compose -f compose.prd.yml down
+
+.PHONY: prod-logs
+prod-logs: ## View production logs
+	docker compose -f compose.prd.yml logs -f
+
+.PHONY: prod-restart
+prod-restart: ## Restart production services
+	docker compose -f compose.prd.yml restart
+
+.PHONY: prod-deploy
+prod-deploy: ## Deploy to production (build and restart)
+	docker compose -f compose.prd.yml build --no-cache
+	docker compose -f compose.prd.yml up -d
+
+.PHONY: prod-migrate
+prod-migrate: ## Run migrations in production
+	docker compose -f compose.prd.yml run --rm migrate
