@@ -14,6 +14,7 @@ A modern Wikitext Previewer API built with Hono, PostgreSQL, Docker, and Bun run
 - 📦 Distroless Docker image (~100MB)
 - 🔒 Optional password protection (future feature)
 - 🌐 CORS support for web applications
+- 🚀 FTML parsing and rendering via WebAssembly API
 
 ## Quick Start
 
@@ -216,7 +217,6 @@ See `.env.example` for all available environment variables:
 ## Future Features
 
 - 🌐 Wikidot integration using [scp-jp-utilities](https://github.com/ukwhatn/scp-jp-utilities)
-- 🔧 FTML parsing via WebAssembly API
 - 🔐 Enhanced authentication and authorization
 - 🔄 Real-time collaboration features
 
