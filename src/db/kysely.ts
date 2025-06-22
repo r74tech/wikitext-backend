@@ -7,46 +7,46 @@ let db: Kysely<Database> | null = null;
 let pool: Pool | null = null;
 
 export function getDb(): Kysely<Database> {
-	if (!db) {
-		pool = new Pool({
-			connectionString: config.DATABASE_URL,
-			max: 20,
-			idleTimeoutMillis: 30000,
-			connectionTimeoutMillis: 2000,
-			ssl: config.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined,
-		});
+    if (!db) {
+        pool = new Pool({
+            connectionString: config.DATABASE_URL,
+            max: 20,
+            idleTimeoutMillis: 30000,
+            connectionTimeoutMillis: 2000,
+            ssl: config.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined,
+        });
 
-		pool.on("error", (err) => {
-			console.error("Unexpected error on idle database client", err);
-		});
+        pool.on("error", (err) => {
+            console.error("Unexpected error on idle database client", err);
+        });
 
-		db = new Kysely<Database>({
-			dialect: new PostgresDialect({
-				pool,
-			}),
-			log(event) {
-				if (config.NODE_ENV === "development") {
-					if (event.level === "query") {
-						console.log("Query:", event.query.sql);
-						console.log("Parameters:", event.query.parameters);
-					}
-				}
-			},
-		});
-	}
+        db = new Kysely<Database>({
+            dialect: new PostgresDialect({
+                pool,
+            }),
+            log(event) {
+                if (config.NODE_ENV === "development") {
+                    if (event.level === "query") {
+                        console.log("Query:", event.query.sql);
+                        console.log("Parameters:", event.query.parameters);
+                    }
+                }
+            },
+        });
+    }
 
-	return db;
+    return db;
 }
 
 export async function closeDb(): Promise<void> {
-	if (db) {
-		await db.destroy();
-		db = null;
-		pool = null;
-	}
+    if (db) {
+        await db.destroy();
+        db = null;
+        pool = null;
+    }
 }
 
 export async function transaction<T>(fn: (trx: Kysely<Database>) => Promise<T>): Promise<T> {
-	const database = getDb();
-	return await database.transaction().execute(fn);
+    const database = getDb();
+    return await database.transaction().execute(fn);
 }

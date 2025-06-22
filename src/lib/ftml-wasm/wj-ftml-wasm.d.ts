@@ -6,98 +6,98 @@
  * Page information structure for FTML parsing
  */
 export interface PageInfo {
-	score?: number;
-	alt_title?: string | null;
-	category?: string | null;
-	language?: string;
-	page?: string;
-	site?: string;
-	tags?: string[];
-	title?: string;
-	[key: string]: unknown;
+    score?: number;
+    alt_title?: string | null;
+    category?: string | null;
+    language?: string;
+    page?: string;
+    site?: string;
+    tags?: string[];
+    title?: string;
+    [key: string]: unknown;
 }
 
 /**
  * HTML output from FTML parser
  */
 export interface HtmlOutput {
-	html: string;
-	meta?: Record<string, unknown>;
-	backlinks?: string[];
+    html: string;
+    meta?: Record<string, unknown>;
+    backlinks?: string[];
 }
 
 /**
  * Token structure from tokenizer
  */
 export interface Token {
-	type: string;
-	value: string;
-	start: number;
-	end: number;
-	[key: string]: unknown;
+    type: string;
+    value: string;
+    start: number;
+    end: number;
+    [key: string]: unknown;
 }
 
 /**
  * AST Node structure
  */
 export interface AstNode {
-	element?: string;
-	data?: unknown;
-	elements?: AstNode[];
-	[key: string]: unknown;
+    element?: string;
+    data?: unknown;
+    elements?: AstNode[];
+    [key: string]: unknown;
 }
 
 /**
  * Parse error structure
  */
 export interface ParseError {
-	type: string;
-	message: string;
-	position?: {
-		start: number;
-		end: number;
-	};
-	[key: string]: unknown;
+    type: string;
+    message: string;
+    position?: {
+        start: number;
+        end: number;
+    };
+    [key: string]: unknown;
 }
 
 /**
  * Detailed HTML output with AST and tokens
  */
 export interface DetailedHtmlOutput extends HtmlOutput {
-	tokens: Token[];
-	ast: AstNode;
-	errors: ParseError[];
+    tokens: Token[];
+    ast: AstNode;
+    errors: ParseError[];
 }
 
 /**
  * Wikitext rendering settings
  */
 export interface WikitextSettings {
-	mode?: "page" | "forum" | "comment";
-	layout?: "wikidot" | "wikijump";
+    mode?: "page" | "forum" | "comment";
+    layout?: "wikidot" | "wikijump";
 }
 
 /**
  * Parsed result structure
  */
 export interface ParsedResult {
-	syntax_tree(): AstNode;
-	errors(): ParseError[];
+    syntax_tree(): AstNode;
+    errors(): ParseError[];
 }
 
 /**
  * Tokenized result structure
  */
 export interface TokenizedResult {
-	tokens(): Token[];
+    tokens(): Token[];
 }
 
 /**
  * UTF16 index map structure
  */
 export interface IndexMap {
-	indices: number[];
-	mapping: Record<number, number>;
+    indices: number[];
+    mapping: Record<number, number>;
 }
 
 /**
@@ -115,10 +115,10 @@ export function init(): Promise<void>;
  * @returns HTML output with metadata and backlinks
  */
 export function renderHTML(
-	source: string,
-	info: PageInfo,
-	mode?: string,
-	layout?: string,
+    source: string,
+    info: PageInfo,
+    mode?: string,
+    layout?: string,
 ): HtmlOutput;
 
 /**
@@ -130,10 +130,10 @@ export function renderHTML(
  * @returns Detailed output with HTML, AST, tokens, and errors
  */
 export function detailRenderHTML(
-	source: string,
-	info: PageInfo,
-	mode?: string,
-	layout?: string,
+    source: string,
+    info: PageInfo,
+    mode?: string,
+    layout?: string,
 ): DetailedHtmlOutput;
 
 /**
@@ -155,10 +155,10 @@ export function renderText(source: string, info: PageInfo, mode?: string, layout
  * @returns Object with ast and errors
  */
 export function parse(
-	source: string,
-	info: PageInfo,
-	mode?: string,
-	layout?: string,
+    source: string,
+    info: PageInfo,
+    mode?: string,
+    layout?: string,
 ): { ast: AstNode; errors: ParseError[] };
 
 /**
@@ -219,29 +219,29 @@ export function errors(parsed: ParsedResult): ParseError[];
  * Page class
  */
 export class Page {
-	constructor(info: PageInfo);
+    constructor(info: PageInfo);
 }
 
 /**
  * Default export is the module itself
  */
 declare const ftmlModule: {
-	init: typeof init;
-	renderHTML: typeof renderHTML;
-	detailRenderHTML: typeof detailRenderHTML;
-	renderText: typeof renderText;
-	parse: typeof parse;
-	wordCount: typeof wordCount;
-	makeInfo: typeof makeInfo;
-	ready: boolean;
-	loading: Promise<void>;
-	version: string;
-	tokenize: typeof tokenize;
-	preprocess: typeof preprocess;
-	getUTF16IndexMap: typeof getUTF16IndexMap;
-	inspectTokens: typeof inspectTokens;
-	errors: typeof errors;
-	Page: typeof Page;
+    init: typeof init;
+    renderHTML: typeof renderHTML;
+    detailRenderHTML: typeof detailRenderHTML;
+    renderText: typeof renderText;
+    parse: typeof parse;
+    wordCount: typeof wordCount;
+    makeInfo: typeof makeInfo;
+    ready: boolean;
+    loading: Promise<void>;
+    version: string;
+    tokenize: typeof tokenize;
+    preprocess: typeof preprocess;
+    getUTF16IndexMap: typeof getUTF16IndexMap;
+    inspectTokens: typeof inspectTokens;
+    errors: typeof errors;
+    Page: typeof Page;
 };
 
 export default ftmlModule;

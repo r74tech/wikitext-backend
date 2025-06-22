@@ -1,52 +1,52 @@
 {
-	"name": "wikitext-backend",
-	"version": "1.0.0",
-	"description": "Wikitext Previewer API with PostgreSQL and Docker",
-	"main": "dist/index.js",
-	"scripts": {
-		"dev": "bun run --hot src/index.ts",
-		"build": "tsc",
-		"start": "bun run dist/index.js",
-		"migrate": "bun run src/db/migrate.ts",
-		"migrate:up": "bun run src/db/migrate.ts up",
-		"migrate:down": "bun run src/db/migrate.ts down",
-		"typecheck": "tsc --noEmit",
-		"test": "bun test",
-		"format": "biome format --write .",
-		"format:check": "biome format .",
-		"lint": "biome lint .",
-		"lint:fix": "biome lint --write .",
-		"lint:oxlint": "oxlint src/**/*.ts --silent",
-		"lint:oxlint:strict": "oxlint src/**/*.ts --deny-warnings",
-		"check": "bun run typecheck && bun run format:check && bun run lint && bun run lint:oxlint"
-	},
-	"dependencies": {
-		"@hono/node-server": "^1.12.2",
-		"bcrypt": "^5.1.1",
-		"dotenv": "^16.4.5",
-		"hono": "^4.4.2",
-		"kysely": "^0.27.3",
-		"kysely-postgres-js": "^2.0.0",
-		"nanoid": "^5.0.7",
-		"pg": "^8.12.0",
-		"pg-pool": "^3.6.2",
-		"postgres": "^3.4.4"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.0.4",
-		"@types/bcrypt": "^5.0.2",
-		"@types/bun": "^1.1.6",
-		"@types/node": "^20.14.10",
-		"@types/pg": "^8.11.6",
-		"@typescript-eslint/eslint-plugin": "^7.16.0",
-		"@typescript-eslint/parser": "^7.16.0",
-		"eslint": "^8.57.0",
-		"jest": "^29.7.0",
-		"oxlint": "^0.13.2",
-		"tsx": "^4.16.2",
-		"typescript": "^5.5.3"
-	},
-	"engines": {
-		"node": ">=18.0.0"
-	}
+    "name": "wikitext-backend",
+    "version": "1.0.0",
+    "description": "Wikitext Previewer API with PostgreSQL and Docker",
+    "main": "dist/index.js",
+    "scripts": {
+        "dev": "bun run --hot src/index.ts",
+        "build": "tsc",
+        "start": "bun run dist/index.js",
+        "migrate": "bun run src/db/migrate.ts",
+        "migrate:up": "bun run src/db/migrate.ts up",
+        "migrate:down": "bun run src/db/migrate.ts down",
+        "typecheck": "tsc --noEmit",
+        "test": "bun test",
+        "format": "biome format --write .",
+        "format:check": "biome format .",
+        "lint": "biome lint .",
+        "lint:fix": "biome lint --write .",
+        "lint:oxlint": "oxlint src/**/*.ts --silent",
+        "lint:oxlint:strict": "oxlint src/**/*.ts --deny-warnings",
+        "check": "bun run typecheck && bun run format:check && bun run lint && bun run lint:oxlint"
+    },
+    "dependencies": {
+        "@hono/node-server": "^1.12.2",
+        "bcrypt": "^5.1.1",
+        "dotenv": "^16.4.5",
+        "hono": "^4.4.2",
+        "kysely": "^0.27.3",
+        "kysely-postgres-js": "^2.0.0",
+        "nanoid": "^5.0.7",
+        "pg": "^8.12.0",
+        "pg-pool": "^3.6.2",
+        "postgres": "^3.4.4"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^2.0.4",
+        "@types/bcrypt": "^5.0.2",
+        "@types/bun": "^1.1.6",
+        "@types/node": "^20.14.10",
+        "@types/pg": "^8.11.6",
+        "@typescript-eslint/eslint-plugin": "^7.16.0",
+        "@typescript-eslint/parser": "^7.16.0",
+        "eslint": "^8.57.0",
+        "jest": "^29.7.0",
+        "oxlint": "^0.13.2",
+        "tsx": "^4.16.2",
+        "typescript": "^5.5.3"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
 }

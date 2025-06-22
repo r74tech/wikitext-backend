@@ -1,42 +1,43 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.0.4/schema.json",
-	"formatter": {
-		"enabled": true,
-		"indentStyle": "tab",
-		"lineWidth": 100
-	},
-	"javascript": {
-		"formatter": {
-			"semicolons": "always",
-			"quoteStyle": "double"
-		}
-	},
-	"linter": {
-		"enabled": true,
-		"rules": {
-			"recommended": true,
-			"style": {
-				"noNonNullAssertion": "off",
-				"useConst": "error"
-			},
-			"correctness": {
-				"noUnusedVariables": "error"
-			},
-			"suspicious": {
-				"noExplicitAny": "warn"
-			}
-		}
-	},
-	"files": {
-		"ignoreUnknown": true,
-		"maxSize": 10485760,
-		"includes": ["src/**/*.ts", "src/**/*.tsx", "*.ts", "*.tsx", "*.json"],
-		"experimentalScannerIgnores": [
-			"node_modules/**",
-			"dist/**",
-			"coverage/**",
-			"*.min.js",
-			"src/lib/ftml-wasm/**"
-		]
-	}
+    "$schema": "https://biomejs.dev/schemas/2.0.4/schema.json",
+    "formatter": {
+        "enabled": true,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 100
+    },
+    "javascript": {
+        "formatter": {
+            "semicolons": "always",
+            "quoteStyle": "double"
+        }
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "recommended": true,
+            "style": {
+                "noNonNullAssertion": "off",
+                "useConst": "error"
+            },
+            "correctness": {
+                "noUnusedVariables": "error"
+            },
+            "suspicious": {
+                "noExplicitAny": "warn"
+            }
+        }
+    },
+    "files": {
+        "ignoreUnknown": true,
+        "maxSize": 10485760,
+        "includes": ["src/**/*.ts", "src/**/*.tsx", "*.ts", "*.tsx", "*.json"],
+        "experimentalScannerIgnores": [
+            "node_modules/**",
+            "dist/**",
+            "coverage/**",
+            "*.min.js",
+            "src/lib/ftml-wasm/**"
+        ]
+    }
 }

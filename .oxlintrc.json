@@ -1,20 +1,20 @@
 {
-	"plugins": ["promise", "import", "node"],
-	"categories": {
-		"correctness": "error",
-		"suspicious": "warn"
-	},
-	"rules": {
-		"no-console": "off",
-		"typescript/no-explicit-any": "warn"
-	},
-	"ignorePatterns": [
-		"node_modules",
-		"dist",
-		"build",
-		"coverage",
-		"*.min.js",
-		"src/lib/ftml-wasm/**",
-		"**/*.js"
-	]
+    "plugins": ["promise", "import", "node"],
+    "categories": {
+        "correctness": "error",
+        "suspicious": "warn"
+    },
+    "rules": {
+        "no-console": "off",
+        "typescript/no-explicit-any": "warn"
+    },
+    "ignorePatterns": [
+        "node_modules",
+        "dist",
+        "build",
+        "coverage",
+        "*.min.js",
+        "src/lib/ftml-wasm/**",
+        "**/*.js"
+    ]
 }

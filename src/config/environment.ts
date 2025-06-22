@@ -1,58 +1,58 @@
 import dotenv from "dotenv";
 
 if (!process.env.DATABASE_URL && !process.env.DATABASE_HOST) {
-	dotenv.config();
+    dotenv.config();
 }
 
 export interface Config {
-	NODE_ENV: string;
-	PORT: number;
-	DATABASE_URL: string;
-	CORS_ORIGINS: string[];
-	LOG_LEVEL: string;
-	WIKIDOT_API_KEY?: string;
-	WIKIDOT_SITE_ID?: string;
+    NODE_ENV: string;
+    PORT: number;
+    DATABASE_URL: string;
+    CORS_ORIGINS: string[];
+    LOG_LEVEL: string;
+    WIKIDOT_API_KEY?: string;
+    WIKIDOT_SITE_ID?: string;
 }
 
 function parseEnv(): Config {
-	const {
-		NODE_ENV = "development",
-		PORT = "3000",
-		DATABASE_URL,
-		DATABASE_HOST,
-		DATABASE_PORT = "5432",
-		DATABASE_NAME,
-		DATABASE_USER,
-		DATABASE_PASSWORD,
-		CORS_ORIGINS = "http://localhost:3000",
-		LOG_LEVEL = "info",
-		WIKIDOT_API_KEY,
-		WIKIDOT_SITE_ID,
-	} = process.env;
+    const {
+        NODE_ENV = "development",
+        PORT = "3000",
+        DATABASE_URL,
+        DATABASE_HOST,
+        DATABASE_PORT = "5432",
+        DATABASE_NAME,
+        DATABASE_USER,
+        DATABASE_PASSWORD,
+        CORS_ORIGINS = "http://localhost:3000",
+        LOG_LEVEL = "info",
+        WIKIDOT_API_KEY,
+        WIKIDOT_SITE_ID,
+    } = process.env;
 
-	let dbUrl = DATABASE_URL;
-	if (!dbUrl && DATABASE_HOST) {
-		if (!DATABASE_NAME || !DATABASE_USER || !DATABASE_PASSWORD) {
-			throw new Error(
-				"Database configuration incomplete. Need DATABASE_HOST, DATABASE_NAME, DATABASE_USER, and DATABASE_PASSWORD",
-			);
-		}
-		dbUrl = `postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}`;
-	}
+    let dbUrl = DATABASE_URL;
+    if (!dbUrl && DATABASE_HOST) {
+        if (!DATABASE_NAME || !DATABASE_USER || !DATABASE_PASSWORD) {
+            throw new Error(
+                "Database configuration incomplete. Need DATABASE_HOST, DATABASE_NAME, DATABASE_USER, and DATABASE_PASSWORD",
+            );
+        }
+        dbUrl = `postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}`;
+    }
 
-	if (!dbUrl) {
-		throw new Error("DATABASE_URL or database connection parameters required");
-	}
+    if (!dbUrl) {
+        throw new Error("DATABASE_URL or database connection parameters required");
+    }
 
-	return {
-		NODE_ENV,
-		PORT: Number.parseInt(PORT, 10),
-		DATABASE_URL: dbUrl,
-		CORS_ORIGINS: CORS_ORIGINS.split(",").map((origin) => origin.trim()),
-		LOG_LEVEL,
-		WIKIDOT_API_KEY,
-		WIKIDOT_SITE_ID,
-	};
+    return {
+        NODE_ENV,
+        PORT: Number.parseInt(PORT, 10),
+        DATABASE_URL: dbUrl,
+        CORS_ORIGINS: CORS_ORIGINS.split(",").map((origin) => origin.trim()),
+        LOG_LEVEL,
+        WIKIDOT_API_KEY,
+        WIKIDOT_SITE_ID,
+    };
 }
 
 export const config = parseEnv();
