@@ -23,7 +23,7 @@
     "dependencies": {
         "@hono/node-server": "^1.12.2",
         "bcrypt": "^6.0.0",
-        "dotenv": "^16.4.5",
+        "dotenv": "^17.2.0",
         "hono": "^4.4.2",
         "kysely": "^0.28.3",
         "kysely-postgres-js": "^2.0.0",
