@@ -83,13 +83,13 @@ export async function insertRevisionData(
 export async function getRevisionData(
     db: Kysely<Database>,
     shortId: string,
-    revisionId: number,
+    revisionNumber: number,
 ): Promise<RevisionData | undefined> {
     const result = await db
         .selectFrom("revisiondata")
         .selectAll()
         .where("shortId", "=", shortId)
-        .where("id", "=", revisionId)
+        .where("revisionCount", "=", revisionNumber)
         .executeTakeFirst();
 
     return result ? toRevisionData(result) : undefined;
@@ -123,6 +123,7 @@ export async function createPageWithRevision(
                 shortId: indexData.shortId,
                 title: indexData.title,
                 source: indexData.source,
+                createdBy: indexData.createdBy,
                 updatedBy: indexData.updatedBy,
                 revisionCount: 0,
             })
@@ -176,13 +177,23 @@ export async function updatePageWithRevision(
     }
 
     try {
+        const updateFields: {
+            title?: string;
+            source?: string;
+            updatedBy: string;
+        } = {
+            updatedBy: updateData.updatedBy,
+        };
+        if (updateData.title !== undefined) {
+            updateFields.title = updateData.title;
+        }
+        if (updateData.source !== undefined) {
+            updateFields.source = updateData.source;
+        }
+
         const updatedIndex = await db
             .updateTable("indexdata")
-            .set({
-                title: updateData.title,
-                source: updateData.source,
-                updatedBy: updateData.updatedBy,
-            })
+            .set(updateFields)
             .where("shortId", "=", shortId)
             .returningAll()
             .executeTakeFirstOrThrow();

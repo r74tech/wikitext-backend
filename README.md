@@ -1,4 +1,4 @@
-# Wikitext Backend - Cloudflare Workers Edition
+# Wikitext Backend
 
 Wikitext preview API built with Cloudflare Workers, Hono, and D1 database.
 
@@ -124,7 +124,7 @@ The project includes automated deployment workflows:
 
 ### History
 - `POST /v1/data/:shortId/history` - Get revision history
-- `POST /v1/data/:shortId/revision/:revisionId` - Get specific revision
+- `POST /v1/data/:shortId/revision/:revisionNumber` - Get specific revision
 
 ## Database Schema
 

@@ -22,11 +22,11 @@ export interface ClientPageData {
 }
 
 export interface ClientRevisionData {
-    revisionId: number;
+    revisionId: number; // Database ID of the revision
     shortId: string;
     title: string;
     source: string;
-    revisionCount: number;
+    revisionCount: number; // Revision number (0-based)
     createdAt: string;
     createdBy: string;
 }
@@ -53,8 +53,8 @@ export interface NewIndexData {
 }
 
 export interface IndexDataUpdate {
-    title: string;
-    source: string;
+    title?: string;
+    source?: string;
     updatedBy: string;
 }
 

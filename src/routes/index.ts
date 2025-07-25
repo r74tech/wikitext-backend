@@ -26,7 +26,7 @@ export function setupRoutes(app: Hono<{ Bindings: Env }>) {
                 },
                 history: {
                     list: "POST /v1/data/:shortId/history",
-                    revision: "POST /v1/data/:shortId/revision/:revisionId",
+                    revision: "POST /v1/data/:shortId/revision/:revisionNumber",
                 },
             },
         });
@@ -48,5 +48,5 @@ export function setupRoutes(app: Hono<{ Bindings: Env }>) {
     app.patch("/v1/data/:shortId", updateData);
 
     app.post("/v1/data/:shortId/history", getPageHistoryData);
-    app.post("/v1/data/:shortId/revision/:revisionId", getPageRevisionData);
+    app.post("/v1/data/:shortId/revision/:revisionNumber", getPageRevisionData);
 }

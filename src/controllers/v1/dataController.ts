@@ -7,7 +7,7 @@ import type { Env } from "../../types/bindings";
 import { Logger } from "../../utils/logger";
 import {
     createPageRequestSchema,
-    revisionIdParamSchema,
+    revisionNumberParamSchema,
     shortIdParamSchema,
     updatePageRequestSchema,
 } from "../../validation/schemas";
@@ -48,18 +48,21 @@ export async function getPageData(c: Context<{ Bindings: Env }>): Promise<Respon
 export async function getPageRevisionData(c: Context<{ Bindings: Env }>): Promise<Response> {
     const logger = new Logger(c);
     const shortId = c.req.param("shortId");
-    const revisionIdStr = c.req.param("revisionId");
+    const revisionNumberStr = c.req.param("revisionNumber");
+    
+    logger.debug("getPageRevisionData called", { shortId, revisionNumberStr });
 
     try {
         const validatedShortId = shortIdParamSchema.parse(shortId);
-        const validatedRevisionId = revisionIdParamSchema.parse(revisionIdStr);
+        const validatedRevisionNumber = revisionNumberParamSchema.parse(revisionNumberStr);
 
         const db = createDb(c.env);
         const pageService = new PageService(db, logger);
-        const response = await pageService.getPageRevision(validatedShortId, validatedRevisionId);
+        const response = await pageService.getPageRevision(validatedShortId, validatedRevisionNumber);
 
         return c.json(response);
     } catch (error) {
+        logger.error("Error in getPageRevisionData", error, { shortId, revisionNumberStr });
         if (error instanceof ValidationError) {
             return c.json(
                 { data: null, error: formatValidationError(error) },
@@ -153,7 +156,7 @@ export async function updateData(c: Context<{ Bindings: Env }>): Promise<Respons
             validatedShortId,
             validatedData.title,
             validatedData.source,
-            validatedData.createdBy,
+            validatedData.updatedBy,
         );
 
         logger.debug("PATCH /v1/data response", {

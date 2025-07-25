@@ -36,11 +36,11 @@ export class PageService {
 
     async getPageRevision(
         shortId: string,
-        revisionId: number,
+        revisionNumber: number,
     ): Promise<DataResponse<ClientRevisionData>> {
         try {
-            this.logger.debug("Getting revision data", { shortId, revisionId });
-            const revisionData = await db.getRevisionData(this.database, shortId, revisionId);
+            this.logger.debug("Getting revision data", { shortId, revisionNumber });
+            const revisionData = await db.getRevisionData(this.database, shortId, revisionNumber);
 
             if (!revisionData) {
                 throw new NotFoundError(ERROR_MESSAGES.REVISION_NOT_FOUND);
@@ -54,7 +54,7 @@ export class PageService {
             }
             this.logger.error("Failed to get revision data", error, {
                 shortId,
-                revisionId,
+                revisionNumber,
             });
             return { data: null, error: ERROR_MESSAGES.FAILED_TO_RETRIEVE_REVISION };
         }
@@ -86,7 +86,7 @@ export class PageService {
                 title,
                 source,
                 revisionCount: 0,
-                createdBy,
+                createdBy: createdBy,
                 updatedBy: createdBy,
             };
 
@@ -115,8 +115,8 @@ export class PageService {
 
     async updatePage(
         shortId: string,
-        title: string,
-        source: string,
+        title: string | undefined,
+        source: string | undefined,
         updatedBy: string,
     ): Promise<DataResponse<ClientPageData>> {
         try {
@@ -128,15 +128,15 @@ export class PageService {
             }
 
             const updateData = {
-                title,
-                source,
+                title: title ?? existing.title,
+                source: source ?? existing.source,
                 updatedBy,
             };
 
             const revisionData = {
                 shortId,
-                title,
-                source,
+                title: title ?? existing.title,
+                source: source ?? existing.source,
                 createdBy: updatedBy,
                 revisionCount: 0,
             };

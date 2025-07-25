@@ -43,19 +43,19 @@ export const createPageRequestSchema = z.object({
 });
 
 export const updatePageRequestSchema = z.object({
-    title: titleSchema,
-    source: sourceSchema,
-    createdBy: createdBySchema,
+    title: titleSchema.optional(),
+    source: sourceSchema.optional(),
+    updatedBy: createdBySchema,
 });
 
 export const shortIdParamSchema = z
     .string()
     .length(VALIDATION_CONSTANTS.SHORT_ID_LENGTH, `Invalid shortId format`);
 
-export const revisionIdParamSchema = z
+export const revisionNumberParamSchema = z
     .string()
     .transform((val) => Number.parseInt(val, 10))
-    .pipe(z.number().int().positive("Revision ID must be a positive integer"));
+    .pipe(z.number().int().nonnegative("Revision number must be a non-negative integer"));
 
 export type CreatePageRequest = z.infer<typeof createPageRequestSchema>;
 export type UpdatePageRequest = z.infer<typeof updatePageRequestSchema>;

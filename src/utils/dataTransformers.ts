@@ -53,7 +53,7 @@ export function toClientPageData(indexData: IndexData): ClientPageData {
         shortId: indexData.shortId,
         title: indexData.title,
         source: indexData.source,
-        createdAt: indexData.updatedAt,
+        createdAt: indexData.createdAt,
         createdBy: indexData.createdBy,
         updatedAt: indexData.updatedAt,
         updatedBy: indexData.updatedBy,
