@@ -48,7 +48,7 @@ coverage/
 # Cloudflare Workers
 .wrangler/
 .dev.vars
-
+wrangler.toml
 
 # OS files
 Thumbs.db

@@ -1,0 +1,40 @@
+name = "wikitext-backend"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+logpush = true
+
+[observability]
+enabled = true
+
+[env.stg]
+name = "test-backend"
+
+[[env.stg.d1_databases]]
+binding = "DB"
+database_name = "test-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "db/migrations"
+
+[env.stg.vars]
+CORS_ORIGINS = "https://example.com"
+LOG_LEVEL = "debug"
+
+[env.prd]
+name = "test-backend"
+
+[[env.prd.d1_databases]]
+binding = "DB"
+database_name = "test-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "db/migrations"
+
+[env.prd.vars]
+CORS_ORIGINS = "https://example.com"
+LOG_LEVEL = "info"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "test-db"
+database_id = "local"
+migrations_dir = "db/migrations"
