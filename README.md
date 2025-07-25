@@ -1,233 +1,157 @@
-# Wikitext Backend
+# Wikitext Backend - Cloudflare Workers Edition
 
-A modern Wikitext Previewer API built with Hono, PostgreSQL, Docker, and Bun runtime. This project provides a RESTful API for creating, updating, and managing wiki pages with full revision history tracking.
+Wikitext preview API built with Cloudflare Workers, Hono, and D1 database.
 
 ## Features
 
-- 📝 Create and update wiki pages
-- 📚 Full revision history tracking
-- 🔄 Automatic revision counting
-- 🐳 Docker and Docker Compose setup
-- 🗄️ PostgreSQL database with migrations
-- 🛡️ Type-safe SQL with Kysely (no raw SQL!)
-- 🚀 Bun runtime for better performance
-- 📦 Distroless Docker image (~100MB)
-- 🔒 Optional password protection (future feature)
-- 🌐 CORS support for web applications
-- 🚀 FTML parsing and rendering via WebAssembly API
+- Create and update wiki pages with revision history
+- Full revision history tracking with automatic revision counting
+- Deployed globally on Cloudflare's edge network
+- D1 SQLite database with type-safe queries (Kysely)
+- CORS support for web applications
+- Multi-environment support (staging/production)
+- FTML rendering via external WASM module
+- Zero-config deployment with Wrangler
 
-## Quick Start
+## Prerequisites
 
-### Prerequisites
+- Node.js 18+ or Bun
+- Cloudflare account with Workers and D1 access
+- Wrangler CLI (`npm install -g wrangler`)
 
-- Docker and Docker Compose
-- Bun 1.0+ (for local development) - [Install Bun](https://bun.sh)
-- PostgreSQL (if not using Docker)
-- Node.js 18+ (optional, for compatibility)
-
-### Using Docker Compose (Recommended)
+## Setup
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/yourusername/wikitext-backend.git
 cd wikitext-backend
 ```
 
-2. Quick start with Make:
+2. Install dependencies:
 ```bash
-make quick-start
-```
-
-This will:
-- Copy `.env.example` to `.env`
-- Start all Docker services
-- Run database migrations
-- Make the API available at `http://localhost:3000`
-
-#### Alternative manual setup:
-```bash
-cp .env.example .env
-docker compose up -d
-docker compose run --rm migrate
-```
-
-### Local Development
-
-1. Install dependencies:
-```bash
+npm install
+# or
 bun install
 ```
 
-2. Set up environment variables:
+3. Create D1 databases:
 ```bash
-cp .env.example .env
-# Edit .env with your database credentials
+# Create staging database
+wrangler d1 create wikitext-db-stg
+
+# Create production database  
+wrangler d1 create wikitext-db-prd
 ```
 
-3. Run database migrations:
+4. Update `wrangler.toml` with your database IDs:
+```toml
+[[env.stg.d1_databases]]
+database_id = "YOUR_STG_DATABASE_ID"
+
+[[env.prd.d1_databases]]
+database_id = "YOUR_PRD_DATABASE_ID"
+```
+
+5. Run migrations:
 ```bash
-bun run migrate:up
-```
+# For local development
+npm run db:migrate:local
 
-4. Start the development server:
-```bash
-bun run dev
-```
+# For staging
+npm run db:migrate:stg
 
-## API Endpoints
-
-### Health Check
-```
-GET /v1/health
-```
-
-### Create Page
-```
-POST /v1/data
-Body: {
-  "title": "Page Title",
-  "source": "Wiki content",
-  "createdBy": "username"
-}
-```
-
-### Update Page
-```
-PATCH /v1/data/:shortId
-Body: {
-  "title": "Updated Title",
-  "source": "Updated content",
-  "createdBy": "username"
-}
-```
-
-### Get Page
-```
-GET /v1/data/:shortId
-```
-
-### Get Page History
-```
-POST /v1/data/:shortId/history
-```
-
-### Get Specific Revision
-```
-POST /v1/data/:shortId/revision/:revisionId
+# For production
+npm run db:migrate:prd
 ```
 
 ## Development
 
-### Project Structure
-```
-wikitext-backend/
-├── src/
-│   ├── config/         # Configuration files
-│   ├── db/            # Database connection and queries
-│   ├── models/        # TypeScript interfaces
-│   ├── utils/         # Utility functions
-│   └── index.ts       # Main application entry
-├── db/
-│   └── migrations/    # SQL migration files
-├── compose.yml # Docker Compose configuration
-├── Dockerfile        # Docker image definition
-└── package.json      # Node.js dependencies
-```
-
-### Available Scripts
-
-#### Make Commands (Recommended)
-Run `make help` to see all available commands. Common ones include:
-
-- `make dev` - Start development server locally
-- `make up` - Start all Docker services
-- `make down` - Stop all services
-- `make logs` - View application logs
-- `make migrate` - Run database migrations
-- `make db-shell` - Access PostgreSQL shell
-- `make shell` - Access application container
-- `make status` - Check status of all services
-
-#### Bun Scripts
-- `bun run dev` - Start development server with hot reload
-- `bun run build` - Build TypeScript to JavaScript
-- `bun start` - Start production server
-- `bun run migrate:up` - Run pending migrations
-- `bun run migrate:status` - Check migration status
-- `bun run typecheck` - Run TypeScript type checking
-
-### Database Migrations
-
-Create a new migration:
 ```bash
-# Create a new SQL file in db/migrations/
-# Name format: 00X_description.sql
+# Start development server (staging environment)
+npm run dev
+
+# Start with production config
+npm run dev:prd
 ```
 
-Run migrations:
-```bash
-bun run migrate:up
-```
+The API will be available at `http://localhost:8787`
 
-Check migration status:
-```bash
-bun run migrate:status
-```
+## Deployment
 
-## Docker
-
-### Build and Run
+### Manual Deployment
 
 ```bash
-# Build the image
-docker build -t wikitext-backend .
+# Deploy to staging
+npm run deploy:stg
 
-# Run with docker compose
-docker compose up -d
-
-# View logs
-docker compose logs -f app
-
-# Stop services
-docker compose down
+# Deploy to production
+npm run deploy:prd
 ```
 
-### Managing the Database
+### Automated Deployment (GitHub Actions)
 
-```bash
-# Access PostgreSQL
-docker compose exec postgres psql -U wikitext
+The project includes automated deployment workflows:
+- Push to `develop` branch → Deploy to staging
+- Push to `main` branch → Deploy to production
+- FTML WASM module is automatically deployed to GitHub Pages
 
-# Run migrations
-docker compose run --rm migrate
+## API Endpoints
 
-# Access pgAdmin (if enabled)
-# Visit http://localhost:5050
-```
+### Health Check
+- `GET /` - API info and available endpoints
+- `GET /v1/health` - Health status
 
-## Environment Variables
+### Data Management
+- `POST /v1/data` - Create new wiki page
+  ```json
+  {
+    "title": "Page Title",
+    "source": "Wiki content",
+    "createdBy": "username"
+  }
+  ```
 
-See `.env.example` for all available environment variables:
+- `PATCH /v1/data/:shortId` - Update existing page
+  ```json
+  {
+    "title": "Updated Title",
+    "source": "Updated content",
+    "createdBy": "username"
+  }
+  ```
 
-- `PORT` - Server port (default: 3000)
-- `DATABASE_URL` - PostgreSQL connection string
-- `CORS_ORIGINS` - Allowed CORS origins
-- `NODE_ENV` - Environment (development/production)
+- `GET /v1/data/:shortId` - Get current page data
 
-## Future Features
+### History
+- `POST /v1/data/:shortId/history` - Get revision history
+- `POST /v1/data/:shortId/revision/:revisionId` - Get specific revision
 
-- 🌐 Wikidot integration using [scp-jp-utilities](https://github.com/ukwhatn/scp-jp-utilities)
-- 🔐 Enhanced authentication and authorization
-- 🔄 Real-time collaboration features
+## Database Schema
 
-## Contributing
+### indexdata
+- Current state of wiki pages
+- Tracks latest content and revision count
+- Auto-incrementing revision count via triggers
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### revisiondata
+- Historical revisions of pages
+- Immutable audit trail
+- Foreign key relationship to indexdata
+
+## Development Tips
+
+1. Use `wrangler tail` to view real-time logs
+2. Test locally with `wrangler dev --local`
+3. Use D1 console for database queries: `wrangler d1 execute`
+
+## Migration from PostgreSQL
+
+This project was migrated from PostgreSQL/Docker to Cloudflare Workers. Key changes include:
+- PostgreSQL to D1 (SQLite)
+- Node.js/Bun runtime to Cloudflare Workers runtime
+- Docker deployment to Wrangler deployment
+- bcrypt to Web Crypto API (password features removed)
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT

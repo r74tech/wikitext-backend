@@ -1,158 +1,178 @@
-import * as db from "../../db/queries";
-import type { IndexData, IndexDataUpdate, NewIndexData, NewRevisionData } from "../../db/schema";
-import type { ClientPageData, ClientRevisionData, DataResponse } from "../../models/data";
-import { generateNanoid } from "../../utils/nanoid";
+import type { Context } from "hono";
+import { ERROR_MESSAGES, HTTP_STATUS } from "../../config/constants";
+import { createDb } from "../../db/client";
+import { ValidationError } from "../../errors/AppError";
+import { PageService } from "../../services/pageService";
+import type { Env } from "../../types/bindings";
+import { Logger } from "../../utils/logger";
+import {
+    createPageRequestSchema,
+    revisionIdParamSchema,
+    shortIdParamSchema,
+    updatePageRequestSchema,
+} from "../../validation/schemas";
 
-function toClientPageData(indexData: IndexData): ClientPageData {
-    return {
-        shortId: indexData.shortId,
-        title: indexData.title ?? "",
-        source: indexData.source ?? "",
-        createdAt: new Date(indexData.createdAt).toISOString(),
-        createdBy: indexData.createdBy ?? "",
-        updatedAt: new Date(indexData.updatedAt).toISOString(),
-        updatedBy: indexData.updatedBy ?? "",
-        revisionCount: indexData.revisionCount,
-    };
+function formatValidationError(error: unknown): string {
+    if (error instanceof Error) {
+        return error.message;
+    }
+    return ERROR_MESSAGES.INVALID_REQUEST_DATA;
 }
 
-export async function getPageData(shortId: string): Promise<DataResponse<ClientPageData>> {
+export async function getPageData(c: Context<{ Bindings: Env }>): Promise<Response> {
+    const logger = new Logger(c);
+    const shortId = c.req.param("shortId");
+
     try {
-        const indexData = await db.getIndexData(shortId);
+        const validatedShortId = shortIdParamSchema.parse(shortId);
 
-        if (!indexData) {
-            return { data: null, error: "Page not found" };
-        }
+        const db = createDb(c.env);
+        const pageService = new PageService(db, logger);
+        const response = await pageService.getPage(validatedShortId);
 
-        const pageData = toClientPageData(indexData);
-        return { data: pageData };
+        return c.json(response);
     } catch (error) {
-        console.error("Error getting page data:", error);
-        return { data: null, error: "Failed to retrieve page data" };
+        if (error instanceof ValidationError) {
+            return c.json(
+                { data: null, error: formatValidationError(error) },
+                HTTP_STATUS.BAD_REQUEST,
+            );
+        }
+        return c.json(
+            { data: null, error: ERROR_MESSAGES.FAILED_TO_RETRIEVE_DATA },
+            HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        );
     }
 }
 
-export async function getPageRevisionData(
-    shortId: string,
-    revisionId: number,
-): Promise<DataResponse<ClientRevisionData>> {
+export async function getPageRevisionData(c: Context<{ Bindings: Env }>): Promise<Response> {
+    const logger = new Logger(c);
+    const shortId = c.req.param("shortId");
+    const revisionIdStr = c.req.param("revisionId");
+
     try {
-        const revisionData = await db.getRevisionData(shortId, revisionId);
+        const validatedShortId = shortIdParamSchema.parse(shortId);
+        const validatedRevisionId = revisionIdParamSchema.parse(revisionIdStr);
 
-        if (!revisionData) {
-            return { data: null, error: "Revision not found" };
-        }
+        const db = createDb(c.env);
+        const pageService = new PageService(db, logger);
+        const response = await pageService.getPageRevision(validatedShortId, validatedRevisionId);
 
-        const pageData: ClientRevisionData = {
-            revisionId: revisionData.id,
-            shortId: revisionData.shortId,
-            title: revisionData.title ?? "",
-            source: revisionData.source ?? "",
-            revisionCount: revisionData.revisionCount,
-            createdAt: new Date(revisionData.createdAt).toISOString(),
-            createdBy: revisionData.createdBy ?? "",
-        };
-
-        return { data: pageData };
+        return c.json(response);
     } catch (error) {
-        console.error("Error getting revision data:", error);
-        return { data: null, error: "Failed to retrieve revision data" };
+        if (error instanceof ValidationError) {
+            return c.json(
+                { data: null, error: formatValidationError(error) },
+                HTTP_STATUS.BAD_REQUEST,
+            );
+        }
+        return c.json(
+            { data: null, error: ERROR_MESSAGES.FAILED_TO_RETRIEVE_REVISION },
+            HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        );
     }
 }
 
-export async function getPageHistoryData(
-    shortId: string,
-): Promise<DataResponse<ClientRevisionData[]>> {
+export async function getPageHistoryData(c: Context<{ Bindings: Env }>): Promise<Response> {
+    const logger = new Logger(c);
+    const shortId = c.req.param("shortId");
+
     try {
-        const historyData = await db.getHistoryData(shortId);
+        const validatedShortId = shortIdParamSchema.parse(shortId);
 
-        const revisionData: ClientRevisionData[] = historyData.map((data) => ({
-            revisionId: data.id,
-            shortId: data.shortId,
-            title: data.title ?? "",
-            source: data.source ?? "",
-            revisionCount: data.revisionCount,
-            createdAt: new Date(data.createdAt).toISOString(),
-            createdBy: data.createdBy ?? "",
-        }));
+        const db = createDb(c.env);
+        const pageService = new PageService(db, logger);
+        const response = await pageService.getPageHistory(validatedShortId);
 
-        return { data: revisionData };
+        return c.json(response);
     } catch (error) {
-        console.error("Error getting history data:", error);
-        return { data: null, error: "Failed to retrieve history data" };
+        if (error instanceof ValidationError) {
+            return c.json(
+                { data: null, error: formatValidationError(error) },
+                HTTP_STATUS.BAD_REQUEST,
+            );
+        }
+        return c.json(
+            { data: null, error: ERROR_MESSAGES.FAILED_TO_RETRIEVE_HISTORY },
+            HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        );
     }
 }
 
-export async function createData(
-    title: string,
-    source: string,
-    createdBy: string,
-): Promise<DataResponse<ClientPageData>> {
+export async function createData(c: Context<{ Bindings: Env }>): Promise<Response> {
+    const logger = new Logger(c);
+
     try {
-        const shortId = generateNanoid();
+        const body = await c.req.json();
 
-        const indexData: NewIndexData = {
-            shortId,
-            title,
-            source,
-            revisionCount: 0,
-            createdBy,
-            updatedBy: createdBy,
-        };
+        const validatedData = createPageRequestSchema.parse(body);
 
-        const revisionData: NewRevisionData = {
-            shortId,
-            title,
-            source,
-            createdBy,
-            revisionCount: 0,
-        };
+        const db = createDb(c.env);
+        const pageService = new PageService(db, logger);
+        const response = await pageService.createPage(
+            validatedData.title,
+            validatedData.source,
+            validatedData.createdBy,
+        );
 
-        const result = await db.createPageWithRevision(indexData, revisionData);
+        logger.debug("POST /v1/data response", {
+            statusCode: response.data ? HTTP_STATUS.CREATED : HTTP_STATUS.BAD_REQUEST,
+            shortId: response.data?.shortId,
+        });
 
-        if (!result) {
-            return { data: null, error: "Failed to create page" };
-        }
-
-        const pageData = toClientPageData(result.indexData);
-        return { data: pageData };
+        return c.json(response, response.data ? HTTP_STATUS.CREATED : HTTP_STATUS.BAD_REQUEST);
     } catch (error) {
-        console.error("Error creating page:", error);
-        return { data: null, error: "Failed to create page" };
+        logger.error("Error in POST /data", error);
+        if (error instanceof ValidationError) {
+            return c.json(
+                { data: null, error: formatValidationError(error) },
+                HTTP_STATUS.BAD_REQUEST,
+            );
+        }
+        return c.json(
+            { data: null, error: ERROR_MESSAGES.INVALID_REQUEST_DATA },
+            HTTP_STATUS.BAD_REQUEST,
+        );
     }
 }
 
-export async function updateData(
-    shortId: string,
-    title: string,
-    source: string,
-    createdBy: string,
-): Promise<DataResponse<ClientPageData>> {
+export async function updateData(c: Context<{ Bindings: Env }>): Promise<Response> {
+    const logger = new Logger(c);
+    const shortId = c.req.param("shortId");
+
     try {
-        const updateData: IndexDataUpdate = {
-            title,
-            source,
-            updatedBy: createdBy,
-        };
+        const validatedShortId = shortIdParamSchema.parse(shortId);
 
-        const revisionData: NewRevisionData = {
-            shortId,
-            title,
-            source,
-            createdBy,
-            revisionCount: 0,
-        };
+        const body = await c.req.json();
 
-        const result = await db.updatePageWithRevision(shortId, updateData, revisionData);
+        const validatedData = updatePageRequestSchema.parse(body);
 
-        if (!result) {
-            return { data: null, error: "Page not found" };
-        }
+        const db = createDb(c.env);
+        const pageService = new PageService(db, logger);
+        const response = await pageService.updatePage(
+            validatedShortId,
+            validatedData.title,
+            validatedData.source,
+            validatedData.createdBy,
+        );
 
-        const pageData = toClientPageData(result.indexData);
-        return { data: pageData };
+        logger.debug("PATCH /v1/data response", {
+            statusCode: response.data ? HTTP_STATUS.OK : HTTP_STATUS.BAD_REQUEST,
+            shortId: validatedShortId,
+        });
+
+        return c.json(response, response.data ? HTTP_STATUS.OK : HTTP_STATUS.BAD_REQUEST);
     } catch (error) {
-        console.error("Error updating page:", error);
-        return { data: null, error: "Failed to update page" };
+        logger.error("Error in PATCH /data/:shortId", error, { shortId });
+        if (error instanceof ValidationError) {
+            return c.json(
+                { data: null, error: formatValidationError(error) },
+                HTTP_STATUS.BAD_REQUEST,
+            );
+        }
+        return c.json(
+            { data: null, error: ERROR_MESSAGES.INVALID_REQUEST_DATA },
+            HTTP_STATUS.BAD_REQUEST,
+        );
     }
 }

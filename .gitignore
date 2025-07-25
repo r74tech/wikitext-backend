@@ -34,6 +34,7 @@ logs/
 *.sql.backup
 postgres_data/
 pgadmin_data/
+.mf/
 
 # Testing
 coverage/
@@ -43,6 +44,11 @@ coverage/
 *.tmp
 *.temp
 .cache/
+
+# Cloudflare Workers
+.wrangler/
+.dev.vars
+
 
 # OS files
 Thumbs.db

@@ -1,160 +1,211 @@
-import { getDb, transaction } from "./kysely";
+import type { Kysely } from "kysely";
+import { DatabaseError } from "../errors/AppError";
 import type {
     IndexData,
     IndexDataUpdate,
     NewIndexData,
     NewRevisionData,
     RevisionData,
-} from "./schema";
+} from "../models/data";
+import { toIndexData, toRevisionData } from "../utils/dataTransformers";
+import type { Database } from "./types";
 
-export async function insertIndexData(data: NewIndexData): Promise<IndexData> {
-    const db = getDb();
-    const { createdAt: _createdAt, updatedAt: _updatedAt, ...insertData } = data;
+export async function insertIndexData(
+    db: Kysely<Database>,
+    data: NewIndexData,
+): Promise<IndexData> {
     const result = await db
         .insertInto("indexdata")
         .values({
-            ...insertData,
-            revisionCount: insertData.revisionCount ?? 0,
+            shortId: data.shortId,
+            title: data.title,
+            source: data.source,
+            updatedBy: data.updatedBy,
+            revisionCount: 0,
         })
         .returningAll()
         .executeTakeFirstOrThrow();
 
-    return result;
+    return toIndexData(result);
 }
 
 export async function updateIndexData(
+    db: Kysely<Database>,
     shortId: string,
     data: IndexDataUpdate,
 ): Promise<IndexData | undefined> {
-    const db = getDb();
-    const { createdAt: _createdAt, updatedAt: _updatedAt, ...updateData } = data;
     const result = await db
         .updateTable("indexdata")
         .set({
-            ...updateData,
+            title: data.title,
+            source: data.source,
+            updatedBy: data.updatedBy,
         })
         .where("shortId", "=", shortId)
         .returningAll()
         .executeTakeFirst();
 
-    return result;
+    return result ? toIndexData(result) : undefined;
 }
 
-export async function getIndexData(shortId: string): Promise<IndexData | undefined> {
-    const db = getDb();
-    return await db
+export async function getIndexData(
+    db: Kysely<Database>,
+    shortId: string,
+): Promise<IndexData | undefined> {
+    const result = await db
         .selectFrom("indexdata")
         .selectAll()
         .where("shortId", "=", shortId)
         .executeTakeFirst();
+
+    return result ? toIndexData(result) : undefined;
 }
 
-export async function insertRevisionData(data: NewRevisionData): Promise<RevisionData> {
-    const db = getDb();
-    const { createdAt: _createdAt, ...insertData } = data;
+export async function insertRevisionData(
+    db: Kysely<Database>,
+    data: NewRevisionData,
+): Promise<RevisionData> {
     const result = await db
         .insertInto("revisiondata")
         .values({
-            ...insertData,
+            shortId: data.shortId,
+            title: data.title,
+            source: data.source,
+            createdBy: data.createdBy,
+            revisionCount: data.revisionCount,
         })
         .returningAll()
         .executeTakeFirstOrThrow();
 
-    return result;
+    return toRevisionData(result);
 }
 
 export async function getRevisionData(
+    db: Kysely<Database>,
     shortId: string,
     revisionId: number,
 ): Promise<RevisionData | undefined> {
-    const db = getDb();
-    return await db
+    const result = await db
         .selectFrom("revisiondata")
         .selectAll()
         .where("shortId", "=", shortId)
         .where("id", "=", revisionId)
         .executeTakeFirst();
+
+    return result ? toRevisionData(result) : undefined;
 }
 
-export async function getHistoryData(shortId: string): Promise<RevisionData[]> {
-    const db = getDb();
-    return await db
+export async function getHistoryData(
+    db: Kysely<Database>,
+    shortId: string,
+): Promise<RevisionData[]> {
+    const results = await db
         .selectFrom("revisiondata")
         .selectAll()
         .where("shortId", "=", shortId)
         .orderBy("id", "desc")
         .execute();
+
+    return results.map(toRevisionData);
 }
 
 export async function createPageWithRevision(
+    db: Kysely<Database>,
     indexData: NewIndexData,
     revisionData: NewRevisionData,
 ): Promise<{ indexData: IndexData; revisionData: RevisionData }> {
-    return await transaction(async (trx) => {
-        const { createdAt: _createdAt, updatedAt: _updatedAt, ...cleanIndexData } = indexData;
-        const newIndexData = await trx
+    let createdIndexData: IndexData | undefined;
+
+    try {
+        const newIndexData = await db
             .insertInto("indexdata")
             .values({
-                ...cleanIndexData,
+                shortId: indexData.shortId,
+                title: indexData.title,
+                source: indexData.source,
+                updatedBy: indexData.updatedBy,
                 revisionCount: 0,
             })
             .returningAll()
             .executeTakeFirstOrThrow();
 
-        const { createdAt: _revCreatedAt, ...cleanRevisionData } = revisionData;
-        const newRevisionData = await trx
+        createdIndexData = toIndexData(newIndexData);
+
+        const newRevisionData = await db
             .insertInto("revisiondata")
             .values({
-                ...cleanRevisionData,
+                shortId: revisionData.shortId,
+                title: revisionData.title,
+                source: revisionData.source,
+                createdBy: revisionData.createdBy,
                 revisionCount: 0,
             })
             .returningAll()
             .executeTakeFirstOrThrow();
 
         return {
-            indexData: newIndexData,
-            revisionData: newRevisionData,
+            indexData: createdIndexData,
+            revisionData: toRevisionData(newRevisionData),
         };
-    });
+    } catch (error) {
+        if (createdIndexData) {
+            try {
+                await db.deleteFrom("indexdata").where("shortId", "=", indexData.shortId).execute();
+            } catch {}
+        }
+        throw new DatabaseError(
+            `Failed to create page: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+    }
 }
 
 export async function updatePageWithRevision(
+    db: Kysely<Database>,
     shortId: string,
     updateData: IndexDataUpdate,
     revisionData: NewRevisionData,
 ): Promise<{ indexData: IndexData; revisionData: RevisionData } | null> {
-    return await transaction(async (trx) => {
-        const existing = await trx
-            .selectFrom("indexdata")
-            .selectAll()
-            .where("shortId", "=", shortId)
-            .executeTakeFirst();
+    const existing = await db
+        .selectFrom("indexdata")
+        .selectAll()
+        .where("shortId", "=", shortId)
+        .executeTakeFirst();
 
-        if (!existing) {
-            return null;
-        }
+    if (!existing) {
+        return null;
+    }
 
-        const { createdAt: _createdAt, updatedAt: _updatedAt, ...cleanUpdateData } = updateData;
-        const updatedIndex = await trx
+    try {
+        const updatedIndex = await db
             .updateTable("indexdata")
-            .set(cleanUpdateData)
+            .set({
+                title: updateData.title,
+                source: updateData.source,
+                updatedBy: updateData.updatedBy,
+            })
             .where("shortId", "=", shortId)
             .returningAll()
             .executeTakeFirstOrThrow();
 
-        const { createdAt: _revCreatedAt, ...cleanRevisionData } = revisionData;
-        const newRevision = await trx
+        const newRevision = await db
             .insertInto("revisiondata")
             .values({
-                ...cleanRevisionData,
+                shortId: revisionData.shortId,
+                title: revisionData.title,
+                source: revisionData.source,
+                createdBy: revisionData.createdBy,
                 revisionCount: updatedIndex.revisionCount,
             })
             .returningAll()
             .executeTakeFirstOrThrow();
 
         return {
-            indexData: updatedIndex,
-            revisionData: newRevision,
+            indexData: toIndexData(updatedIndex),
+            revisionData: toRevisionData(newRevision),
         };
-    });
+    } catch (error) {
+        throw new DatabaseError(
+            `Failed to update page: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+    }
 }

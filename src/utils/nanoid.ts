@@ -1,7 +1,7 @@
 import { customAlphabet } from "nanoid";
+import { NANOID_CONFIG } from "../config/constants";
 
-const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-const nanoid = customAlphabet(alphabet, 10);
+const nanoid = customAlphabet(NANOID_CONFIG.ALPHABET, NANOID_CONFIG.LENGTH);
 
 export function generateNanoid(): string {
     return nanoid();
